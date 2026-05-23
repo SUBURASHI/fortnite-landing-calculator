@@ -47,10 +47,10 @@ app.get('/about', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+
 app.get('/profile', (req, res) => {
-    // Если пользователь авторизован — показываем калькулятор, иначе на вход
     if (req.session.user) {
-        res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+        res.sendFile(path.join(__dirname, 'public', 'profile.html'));
     } else {
         res.sendFile(path.join(__dirname, 'public', 'index.html'));
     }
