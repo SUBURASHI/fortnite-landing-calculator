@@ -1,6 +1,7 @@
 const express = require('express');
 const session = require('express-session');
 const axios = require('axios');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -15,6 +16,23 @@ app.use(session({
 
 // Раздаём статические файлы из папки public
 app.use(express.static('public'));
+
+// ========== СТРАНИЦЫ ==========
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/premium', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'premium.html'));
+});
+
+app.get('/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
+app.get('/success', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'success.html'));
+});
 
 // ========== НАСТРОЙКИ DISCORD ==========
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
@@ -60,7 +78,7 @@ app.get('/auth/discord/callback', async (req, res) => {
             global_name: user.global_name,
             provider: 'discord'
         };
-        res.redirect('/');
+        res.redirect('/dashboard');
     } catch (error) {
         console.error('Discord auth error:', error.response?.data || error.message);
         res.status(500).send('Authentication failed');
@@ -68,8 +86,8 @@ app.get('/auth/discord/callback', async (req, res) => {
 });
 
 // ========== НАСТРОЙКИ EPIC GAMES ==========
-const EPIC_CLIENT_ID = 'xyza7891bBDO36tHjQ6v4rN0CEpR3BjW' ;
-const EPIC_CLIENT_SECRET = 'isB7ZcjGbVygRFC33Iedu6BKk7fq+tsN1zt+nQl0jhM';
+const EPIC_CLIENT_ID = process.env.EPIC_CLIENT_ID;
+const EPIC_CLIENT_SECRET = process.env.EPIC_CLIENT_SECRET;
 const EPIC_REDIRECT_URI = 'https://fortnite-landing-calculator.onrender.com/auth/epic/callback';
 
 // 1. Перенаправление на Epic Games
@@ -115,7 +133,7 @@ app.get('/auth/epic/callback', async (req, res) => {
             provider: 'epic'
         };
         
-        res.redirect('/');
+        res.redirect('/dashboard');
     } catch (error) {
         console.error('Epic auth error:', error.response?.data || error.message);
         res.status(500).send('Authentication failed');
@@ -137,8 +155,36 @@ app.get('/api/user', (req, res) => {
     }
 });
 
+// ========== API ДЛЯ ПРОВЕРКИ ПОДПИСКИ ==========
+// Временное хранилище активных подписок (в реальном проекте используй БД)
+const activeSubscriptions = new Map();
+
+app.post('/api/activate-subscription', (req, res) => {
+    const { userId, orderId } = req.body;
+    if (userId) {
+        const expiry = new Date();
+        expiry.setDate(expiry.getDate() + 30);
+        activeSubscriptions.set(userId, { active: true, expiry: expiry.toISOString() });
+        console.log(`✅ Подписка активирована для пользователя ${userId}`);
+        res.json({ success: true, expiry: expiry.toISOString() });
+    } else {
+        res.json({ success: false });
+    }
+});
+
+app.get('/api/check-subscription', (req, res) => {
+    const userId = req.session.user?.id || req.query.userId;
+    if (userId && activeSubscriptions.has(userId)) {
+        const sub = activeSubscriptions.get(userId);
+        const isValid = sub.active && new Date(sub.expiry) > new Date();
+        res.json({ subscribed: isValid, expiry: sub.expiry });
+    } else {
+        res.json({ subscribed: false });
+    }
+});
+
 // Запускаем сервер
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Сервер запущен на порту ${PORT}`);
+    console.log(`🚀 Сервер запущен на порту ${PORT}`);
 });
