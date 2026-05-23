@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Профиль — Fortnite Landing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0a0c12;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* ========== ШАПКА ========== */
+        .navbar {
+            background: rgba(15, 15, 23, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(45, 45, 58, 0.5);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+        .logo h1 {
+            color: #ffd966;
+            font-size: 20px;
+        }
+        .logo p {
+            color: #aaa;
+            font-size: 10px;
+            margin-top: 2px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 24px;
+        }
+        .nav-links a {
+            color: #ccc;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            color: #ffd966;
+        }
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-menu {
+            position: relative;
+            cursor: pointer;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #ffd966;
+            object-fit: cover;
+        }
+        .dropdown-menu {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background: #1e1f2c;
+            border-radius: 16px;
+            min-width: 200px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border: 1px solid #2d2d3a;
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.2s;
+            z-index: 100;
+        }
+        .user-menu.active .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+        }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #ddd;
+            text-decoration: none;
+            transition: 0.1s;
+            border-bottom: 1px solid #2d2d3a;
+        }
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        .dropdown-item:hover {
+            background: #2a2b3a;
+            color: #ffd966;
+        }
+        .dropdown-item.logout {
+            color: #ff8888;
+        }
+        
+        /* ========== ОСНОВНОЙ КОНТЕНТ ========== */
+        .main-content {
+            flex: 1;
+            padding: 80px 24px 40px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .profile-card {
+            background: #1e1f2c;
+            border-radius: 32px;
+            padding: 40px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,215,0,0.2);
+        }
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid #ffd966;
+            object-fit: cover;
+        }
+        .profile-info h2 {
+            color: #ffd966;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .profile-info p {
+            color: #aaa;
+            font-size: 14px;
+        }
+        .section {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #2d2d3a;
+        }
+        .section h3 {
+            color: #ffd966;
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+        .subscription-status {
+            background: #2a2b3a;
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-top: 12px;
+        }
+        .badge-active {
+            background: #1a5a2a;
+            color: #88ff88;
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 12px;
+        }
+        .badge-expired {
+            background: #5a1a1a;
+            color: #ff8888;
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 12px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            color: #ccc;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            background: #2a2b3a;
+            border: 1px solid #3d3e52;
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+        }
+        .btn {
+            background: #ffd966;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 14px;
+        }
+        .btn-secondary {
+            background: #2a2b3a;
+            color: #ffd966;
+            margin-left: 12px;
+        }
+        .btn-danger {
+            background: #5a1a1a;
+            color: #ff8888;
+        }
+        .message {
+            margin-top: 16px;
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            display: none;
+        }
+        .message.success {
+            background: rgba(0,255,0,0.1);
+            color: #88ff88;
+            display: block;
+        }
+        .message.error {
+            background: rgba(255,0,0,0.1);
+            color: #ff8888;
+            display: block;
+        }
+        @media (max-width: 700px) {
+            .navbar { flex-direction: column; }
+            .nav-left { flex-direction: column; text-align: center; }
+            .nav-links { justify-content: center; }
+            .profile-card { padding: 24px; }
+            .profile-header { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ШАПКА -->
+<nav class="navbar">
+    <div class="nav-left">
+        <div class="logo">
+            <h1>🎯 Fortnite Landing</h1>
+            <p>калькулятор лендинга</p>
+        </div>
+        <div class="nav-links">
+            <a href="/dashboard">🗺️ Карта</a>
+            <a href="/premium">💎 Premium</a>
+            <a href="/profile" class="active">👤 Профиль</a>
+        </div>
+    </div>
+    <div class="nav-right" id="navRight">
+        <!-- Сюда динамически подставляются кнопки входа/аватар -->
+    </div>
+</nav>
+
+<!-- ОСНОВНОЙ КОНТЕНТ -->
+<main class="main-content">
+    <div class="profile-card">
+        <div class="profile-header">
+            <img id="profileAvatar" class="profile-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="Avatar">
+            <div class="profile-info">
+                <h2 id="profileName">Загрузка...</h2>
+                <p id="profileEmail">Загрузка...</p>
+                <p id="profileProvider" style="margin-top: 4px; font-size: 12px;"></p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📅 Статус подписки</h3>
+            <div id="subscriptionInfo" class="subscription-status">Загрузка...</div>
+        </div>
+
+        <div class="section">
+            <h3>✏️ Редактировать профиль</h3>
+            <form id="profileForm">
+                <div class="form-group">
+                    <label>Отображаемое имя</label>
+                    <input type="text" id="displayName" placeholder="Ваше имя">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="userEmail" readonly>
+                </div>
+                <button type="submit" class="btn">💾 Сохранить изменения</button>
+            </form>
+            <div id="profileMessage" class="message"></div>
+        </div>
+
+        <div class="section">
+            <h3>⚠️ Опасная зона</h3>
+            <button id="clearSubscriptionBtn" class="btn btn-danger">🗑 Сбросить подписку (тест)</button>
+            <button id="deleteAccountBtn" class="btn btn-danger" style="margin-left: 12px;">🔥 Удалить аккаунт</button>
+        </div>
+    </div>
+</main>
+
+<script>
+    (function() {
+        let currentUser = null;
+        
+        // ========== ПРОВЕРКА АВТОРИЗАЦИИ ==========
+        async function checkAuth() {
+            try {
+                const res = await fetch('/api/user');
+                const data = await res.json();
+                if (data.loggedIn) {
+                    currentUser = data.user;
+                    updateUI(true);
+                    loadProfile();
+                } else {
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = '/';
+            }
+        }
+        
+        function updateUI(isLoggedIn) {
+            const navRight = document.getElementById('navRight');
+            if (isLoggedIn && currentUser) {
+                const userName = currentUser.global_name || currentUser.username || currentUser.email;
+                const avatarUrl = currentUser.avatar 
+                    ? `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png`
+                    : 'https://cdn.discordapp.com/embed/avatars/0.png';
+                navRight.innerHTML = `
+                    <div class="user-menu" id="userMenu">
+                        <img class="user-avatar" src="${avatarUrl}" alt="Avatar">
+                        <div class="dropdown-menu">
+                            <a href="/profile" class="dropdown-item">👤 Профиль</a>
+                            <a href="/premium" class="dropdown-item">💎 Подписка</a>
+                            <a href="/dashboard" class="dropdown-item">🗺️ Калькулятор</a>
+                            <a href="#" class="dropdown-item logout" id="logoutBtn">🚪 Выйти</a>
+                        </div>
+                    </div>
+                `;
+                const userMenu = document.getElementById('userMenu');
+                if (userMenu) {
+                    userMenu.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        userMenu.classList.toggle('active');
+                    });
+                    document.addEventListener('click', () => {
+                        userMenu.classList.remove('active');
+                    });
+                }
+                document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+                    await fetch('/logout');
+                    window.location.href = '/';
+                });
+            }
+        }
+        
+        // ========== ЗАГРУЗКА ПРОФИЛЯ ==========
+        async function loadProfile() {
+            if (!currentUser) return;
+            
+            const userName = currentUser.global_name || currentUser.username || currentUser.email;
+            const userEmail = currentUser.email || 'Не указан';
+            const provider = currentUser.provider || 'неизвестный';
+            const avatarUrl = currentUser.avatar 
+                ? `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png`
+                : 'https://cdn.discordapp.com/embed/avatars/0.png';
+            
+            document.getElementById('profileAvatar').src = avatarUrl;
+            document.getElementById('profileName').innerText = userName;
+            document.getElementById('profileEmail').innerText = userEmail;
+            document.getElementById('profileProvider').innerHTML = `Вход через: ${provider === 'discord' ? 'Discord 🎮' : provider === 'epic' ? 'Epic Games 🎯' : 'Email ✉️'}`;
+            document.getElementById('displayName').value = currentUser.display_name || userName;
+            document.getElementById('userEmail').value = userEmail;
+            
+            // Проверка подписки в localStorage (временное решение)
+            checkSubscriptionStatus();
+        }
+        
+        function checkSubscriptionStatus() {
+            const isSubscribed = localStorage.getItem('fortnite_subscription') === 'active';
+            const start = parseInt(localStorage.getItem('subscription_start'));
+            const expiry = start ? new Date(start + 30 * 24 * 60 * 60 * 1000) : null;
+            const isExpired = expiry && expiry < new Date();
+            const subscriptionDiv = document.getElementById('subscriptionInfo');
+            
+            if (isSubscribed && !isExpired) {
+                subscriptionDiv.innerHTML = `
+                    <span class="badge-active">✅ Активна</span>
+                    <p style="margin-top: 12px;">Действует до: ${expiry.toLocaleDateString()}</p>
+                    <p style="color: #aaa; font-size: 12px;">Осталось дней: ${Math.ceil((expiry - new Date()) / (1000 * 60 * 60 * 24))}</p>
+                `;
+            } else if (isSubscribed && isExpired) {
+                localStorage.removeItem('fortnite_subscription');
+                localStorage.removeItem('subscription_start');
+                subscriptionDiv.innerHTML = `
+                    <span class="badge-expired">❌ Истекла</span>
+                    <p style="margin-top: 12px;"><a href="/premium" style="color: #ffd966;">Продлить подписку →</a></p>
+                `;
+            } else {
+                subscriptionDiv.innerHTML = `
+                    <span class="badge-expired">❌ Не активна</span>
+                    <p style="margin-top: 12px;"><a href="/premium" style="color: #ffd966;">Оформить подписку →</a></p>
+                `;
+            }
+        }
+        
+        // ========== СОХРАНЕНИЕ ПРОФИЛЯ ==========
+        const profileForm = document.getElementById('profileForm');
+        const profileMessage = document.getElementById('profileMessage');
+        
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newName = document.getElementById('displayName').value;
+            
+            try {
+                // Сохраняем в localStorage (временное решение)
+                localStorage.setItem('user_display_name', newName);
+                profileMessage.textContent = '✅ Имя сохранено!';
+                profileMessage.className = 'message success';
+                setTimeout(() => {
+                    profileMessage.className = 'message';
+                }, 3000);
+                
+                // Обновляем отображение
+                document.getElementById('profileName').innerText = newName;
+                if (currentUser) currentUser.display_name = newName;
+            } catch (error) {
+                profileMessage.textContent = '❌ Ошибка сохранения';
+                profileMessage.className = 'message error';
+                setTimeout(() => {
+                    profileMessage.className = 'message';
+                }, 3000);
+            }
+        });
+        
+        // Сброс подписки (тестовая функция)
+        document.getElementById('clearSubscriptionBtn').addEventListener('click', () => {
+            localStorage.removeItem('fortnite_subscription');
+            localStorage.removeItem('subscription_start');
+            checkSubscriptionStatus();
+            const msg = document.getElementById('profileMessage');
+            msg.textContent = '🔄 Подписка сброшена (тест)';
+            msg.className = 'message success';
+            setTimeout(() => { msg.className = 'message'; }, 3000);
+        });
+        
+        // Удаление аккаунта
+        document.getElementById('deleteAccountBtn').addEventListener('click', async () => {
+            if (confirm('⚠️ Вы уверены? Это действие необратимо. Ваш аккаунт будет удалён.')) {
+                alert('Функция удаления аккаунта временно отключена для тестирования');
+                // Здесь будет логика удаления через API
+            }
+        });
+        
+        checkAuth();
+    })();
+</script>
+</body>
+</html>
