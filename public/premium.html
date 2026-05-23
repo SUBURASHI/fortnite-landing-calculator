@@ -63,26 +63,9 @@
             position: absolute;
             left: 0;
         }
-        .btn-pay {
-            background: #ffd966;
-            border: none;
-            padding: 16px 32px;
-            border-radius: 60px;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
+        .cc-payment-button {
             width: 100%;
-            transition: 0.2s;
-            color: #0f0f17;
-        }
-        .btn-pay:hover {
-            transform: scale(1.02);
-            background: #ffcc33;
-        }
-        .btn-pay:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
+            margin-top: 20px;
         }
         .crypto-icons {
             margin-top: 24px;
@@ -95,16 +78,33 @@
             color: #ffd966;
             text-decoration: none;
         }
-        .error-msg {
-            color: #ff8888;
-            font-size: 12px;
-            margin-top: 16px;
-            display: none;
+        .activate-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #2d2d3a;
         }
-        .loading-msg {
+        .btn-activate {
+            background: #2a2b3a;
             color: #ffd966;
-            font-size: 12px;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 60px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .btn-activate:hover {
+            background: #3a3b4e;
+        }
+        .success-msg {
+            color: #88ff88;
+            font-size: 13px;
             margin-top: 16px;
+            padding: 10px;
+            background: rgba(0,255,0,0.1);
+            border-radius: 12px;
             display: none;
         }
         @media (max-width: 600px) {
@@ -133,108 +133,78 @@
             <li>Экспорт маршрутов в JSON</li>
         </ul>
 
-        <button id="payBtn" class="btn-pay" disabled>💎 Загрузка платёжной системы...</button>
-        <div id="loadingMsg" class="loading-msg">⏳ Подключение к платёжной системе...</div>
-        <div id="errorMsg" class="error-msg"></div>
+        <!-- Виджет CryptoCloud -->
+        <button class="cc-payment-button"></button>
 
         <div class="crypto-icons">
             ₿ 🟡 Ξ 💎
         </div>
         <p style="font-size: 11px; color: #555; margin-top: 20px;">
-            Принимаем USDT, BTC, ETH и другие криптовалюты.<br>
-            После оплаты доступ активируется автоматически.
+            Принимаем USDT, BTC, ETH и другие криптовалюты.
         </p>
+
+        <!-- Кнопка активации после оплаты -->
+        <div class="activate-section">
+            <p style="color: #aaa; font-size: 13px; margin-bottom: 12px;">Уже оплатили?</p>
+            <button id="activateBtn" class="btn-activate">✅ Я оплатил (активировать доступ)</button>
+            <div id="successMsg" class="success-msg"></div>
+        </div>
+
         <a href="/dashboard" class="back-link">← Вернуться в калькулятор</a>
     </div>
 </div>
 
+<!-- Скрипт виджета CryptoCloud -->
+<script defer src="https://cdn.cryptocloud.plus/widget/v1/widget.js"></script>
 <script>
-    (function() {
-        const payBtn = document.getElementById('payBtn');
-        const errorMsg = document.getElementById('errorMsg');
-        const loadingMsg = document.getElementById('loadingMsg');
-        
-        let widgetReady = false;
-        
-        function showError(text) {
-            errorMsg.textContent = text;
-            errorMsg.style.display = 'block';
-            setTimeout(() => {
-                errorMsg.style.display = 'none';
-            }, 5000);
-        }
-        
-        function enableButton() {
-            widgetReady = true;
-            payBtn.disabled = false;
-            payBtn.textContent = '💎 Оплатить криптовалютой';
-            loadingMsg.style.display = 'none';
-        }
-        
-        // Предзагружаем CryptoCloud виджет сразу
-        const script = document.createElement('script');
-        script.src = 'https://widget.cryptocloud.plus/v2/widget.js';
-        script.async = true;
-        
-        script.onload = () => {
-            console.log('✅ CryptoCloud виджет загружен');
-            // Даём виджету немного времени на инициализацию
-            setTimeout(() => {
-                if (typeof CryptoCloudWidget !== 'undefined') {
-                    enableButton();
-                } else {
-                    showError('❌ Платёжная система не инициализирована. Обновите страницу.');
+    // Инициализация виджета после загрузки DOM
+    document.addEventListener("DOMContentLoaded", function() {
+        if (window.CryptoCloudWidget) {
+            window.CryptoCloudWidget.CreateInvoiceButton({
+                size: "standard",
+                template: "variant1:dark",
+                text: "💎 Оплатить криптовалютой",
+                amount: 500,
+                currency: "RUB",
+                shop_id: "2bK0J89q9avkghEU",
+                locale: "ru",
+                onSuccess: function() {
+                    // При успешной оплате показываем сообщение
+                    localStorage.setItem('fortnite_subscription', 'active');
+                    localStorage.setItem('subscription_start', Date.now());
+                    alert('✅ Оплата прошла успешно! Доступ активирован.');
+                    window.location.href = '/dashboard?subscription=active';
                 }
-            }, 500);
-        };
-        
-        script.onerror = () => {
-            showError('❌ Не удалось загрузить платёжную систему. Проверьте интернет-соединение.');
-            payBtn.disabled = false;
-            payBtn.textContent = '💎 Повторить попытку';
-        };
-        
-        document.body.appendChild(script);
-        
-        // Обработчик кнопки оплаты
-        payBtn.addEventListener('click', () => {
-            if (!widgetReady) {
-                showError('⏳ Платёжная система ещё загружается. Подождите секунду.');
-                return;
-            }
-            
-            if (typeof CryptoCloudWidget === 'undefined') {
-                showError('❌ Платёжная система не загружена. Обновите страницу.');
-                return;
-            }
-            
-            try {
-                // 🔑 ЗАМЕНИ НА СВОЙ SHOP_ID ИЗ КАБИНЕТА CRYPTOCLOUD
-                CryptoCloudWidget.createInvoice({
-                    shop_id: 'ТВОЙ_SHOP_ID',
-                    amount: 500,
-                    currency: 'RUB',
-                    order_id: 'sub_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8),
-                    description: 'Подписка на Fortnite Landing Calculator',
-                    lang: 'ru',
-                    theme: 'dark',
-                    onSuccess: function(data) {
-                        console.log('Оплата успешна:', data);
-                        localStorage.setItem('fortnite_subscription', 'active');
-                        localStorage.setItem('subscription_start', Date.now());
-                        window.location.href = '/dashboard?subscription=active';
-                    },
-                    onFail: function(data) {
-                        console.log('Оплата не удалась:', data);
-                        showError('❌ Оплата не была завершена. Попробуйте ещё раз.');
-                    }
-                });
-            } catch (error) {
-                console.error('CryptoCloud error:', error);
-                showError('❌ Ошибка при создании счёта. Попробуйте позже.');
-            }
+            }).mount('.cc-payment-button');
+        } else {
+            console.error('CryptoCloud виджет не загрузился');
+        }
+    });
+
+    // Кнопка ручной активации (на случай, если автоматическая не сработала)
+    const activateBtn = document.getElementById('activateBtn');
+    const successMsg = document.getElementById('successMsg');
+    
+    if (activateBtn) {
+        activateBtn.addEventListener('click', () => {
+            localStorage.setItem('fortnite_subscription', 'active');
+            localStorage.setItem('subscription_start', Date.now());
+            successMsg.textContent = '✅ Доступ активирован! Перенаправление...';
+            successMsg.style.display = 'block';
+            setTimeout(() => {
+                window.location.href = '/dashboard?subscription=active';
+            }, 1500);
         });
-    })();
+    }
+    
+    // Проверка существующей подписки
+    if (localStorage.getItem('fortnite_subscription') === 'active') {
+        successMsg.textContent = '✅ У вас уже есть активная подписка!';
+        successMsg.style.display = 'block';
+        setTimeout(() => {
+            window.location.href = '/dashboard';
+        }, 2000);
+    }
 </script>
 </body>
 </html>
