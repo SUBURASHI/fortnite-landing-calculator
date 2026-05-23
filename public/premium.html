@@ -79,6 +79,11 @@
             transform: scale(1.02);
             background: #ffcc33;
         }
+        .btn-pay:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
         .crypto-icons {
             margin-top: 24px;
             font-size: 28px;
@@ -92,6 +97,12 @@
         }
         .error-msg {
             color: #ff8888;
+            font-size: 12px;
+            margin-top: 16px;
+            display: none;
+        }
+        .loading-msg {
+            color: #ffd966;
             font-size: 12px;
             margin-top: 16px;
             display: none;
@@ -122,7 +133,8 @@
             <li>Экспорт маршрутов в JSON</li>
         </ul>
 
-        <button id="payBtn" class="btn-pay">💎 Оплатить криптовалютой</button>
+        <button id="payBtn" class="btn-pay" disabled>💎 Загрузка платёжной системы...</button>
+        <div id="loadingMsg" class="loading-msg">⏳ Подключение к платёжной системе...</div>
         <div id="errorMsg" class="error-msg"></div>
 
         <div class="crypto-icons">
@@ -140,8 +152,10 @@
     (function() {
         const payBtn = document.getElementById('payBtn');
         const errorMsg = document.getElementById('errorMsg');
+        const loadingMsg = document.getElementById('loadingMsg');
         
-        // Функция для отображения ошибок
+        let widgetReady = false;
+        
         function showError(text) {
             errorMsg.textContent = text;
             errorMsg.style.display = 'block';
@@ -150,36 +164,53 @@
             }, 5000);
         }
         
-        // Загружаем CryptoCloud виджет
+        function enableButton() {
+            widgetReady = true;
+            payBtn.disabled = false;
+            payBtn.textContent = '💎 Оплатить криптовалютой';
+            loadingMsg.style.display = 'none';
+        }
+        
+        // Предзагружаем CryptoCloud виджет сразу
         const script = document.createElement('script');
         script.src = 'https://widget.cryptocloud.plus/v2/widget.js';
         script.async = true;
         
         script.onload = () => {
-            if (typeof CryptoCloudWidget !== 'undefined') {
-                // Виджет загружен, готов к работе
-                console.log('✅ CryptoCloud виджет загружен');
-            } else {
-                showError('❌ Ошибка загрузки платёжной системы. Обновите страницу.');
-            }
+            console.log('✅ CryptoCloud виджет загружен');
+            // Даём виджету немного времени на инициализацию
+            setTimeout(() => {
+                if (typeof CryptoCloudWidget !== 'undefined') {
+                    enableButton();
+                } else {
+                    showError('❌ Платёжная система не инициализирована. Обновите страницу.');
+                }
+            }, 500);
         };
         
         script.onerror = () => {
             showError('❌ Не удалось загрузить платёжную систему. Проверьте интернет-соединение.');
+            payBtn.disabled = false;
+            payBtn.textContent = '💎 Повторить попытку';
         };
         
         document.body.appendChild(script);
         
         // Обработчик кнопки оплаты
         payBtn.addEventListener('click', () => {
+            if (!widgetReady) {
+                showError('⏳ Платёжная система ещё загружается. Подождите секунду.');
+                return;
+            }
+            
             if (typeof CryptoCloudWidget === 'undefined') {
-                showError('⏳ Платёжная система ещё загружается. Попробуйте через секунду.');
+                showError('❌ Платёжная система не загружена. Обновите страницу.');
                 return;
             }
             
             try {
+                // 🔑 ЗАМЕНИ НА СВОЙ SHOP_ID ИЗ КАБИНЕТА CRYPTOCLOUD
                 CryptoCloudWidget.createInvoice({
-                    // 🔑 ЗАМЕНИ НА СВОЙ SHOP_ID ИЗ КАБИНЕТА CRYPTOCLOUD
                     shop_id: 'ТВОЙ_SHOP_ID',
                     amount: 500,
                     currency: 'RUB',
