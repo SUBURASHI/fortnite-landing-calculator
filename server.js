@@ -68,8 +68,8 @@ app.get('/auth/discord/callback', async (req, res) => {
 });
 
 // ========== НАСТРОЙКИ EPIC GAMES ==========
-const EPIC_CLIENT_ID = process.env.EPIC_CLIENT_ID;
-const EPIC_CLIENT_SECRET = process.env.EPIC_CLIENT_SECRET;
+const EPIC_CLIENT_ID = 'xyza7891bBDO36tHjQ6v4rN0CEpR3BjW' ;
+const EPIC_CLIENT_SECRET = 'isB7ZcjGbVygRFC33Iedu6BKk7fq+tsN1zt+nQl0jhM';
 const EPIC_REDIRECT_URI = 'https://fortnite-landing-calculator.onrender.com/auth/epic/callback';
 
 // 1. Перенаправление на Epic Games
