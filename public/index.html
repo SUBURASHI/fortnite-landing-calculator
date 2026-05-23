@@ -3,38 +3,495 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fortnite Landing Calculator</title>
-    
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
+    <title>Fortnite Landing Calculator — Самый точный калькулятор лендинга</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0a0c12;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            color: #fff;
+            line-height: 1.5;
+        }
+        
+        /* ========== ШАПКА ========== */
+        .navbar {
+            background: rgba(15, 15, 23, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(45, 45, 58, 0.5);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo h1 {
+            color: #ffd966;
+            font-size: 24px;
+        }
+        .logo p {
+            color: #aaa;
+            font-size: 12px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 32px;
+        }
+        .nav-links a {
+            color: #ccc;
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .nav-links a:hover {
+            color: #ffd966;
+        }
+        .btn-nav {
+            background: #ffd966;
+            color: #0f0f17;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            text-decoration: none;
+        }
+        .btn-nav:hover {
+            background: #ffcc33;
+            transform: scale(1.02);
+        }
+        
+        /* ========== ГЛАВНЫЙ ЭКРАН (HERO) ========== */
+        .hero {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 60px 32px;
+            max-width: 1400px;
+            margin: 0 auto;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+        .hero-content {
+            flex: 1;
+            min-width: 300px;
+        }
+        .hero-content h1 {
+            font-size: 56px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffd966 0%, #ffaa33 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 20px;
+        }
+        .hero-content p {
+            font-size: 18px;
+            color: #aaa;
+            margin-bottom: 32px;
+            max-width: 500px;
+        }
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .btn-primary {
+            background: #ffd966;
+            color: #0f0f17;
+            padding: 14px 32px;
+            border-radius: 60px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.2s;
+            display: inline-block;
+        }
+        .btn-primary:hover {
+            background: #ffcc33;
+            transform: scale(1.02);
+        }
+        .btn-secondary {
+            background: transparent;
+            color: #ffd966;
+            padding: 14px 32px;
+            border-radius: 60px;
+            text-decoration: none;
+            font-weight: bold;
+            border: 1px solid #ffd966;
+            transition: 0.2s;
+        }
+        .btn-secondary:hover {
+            background: rgba(255,217,102,0.1);
+        }
+        .hero-preview {
+            flex: 1;
+            background: #1e1f2c;
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,215,0,0.2);
+        }
+        .hero-preview img {
+            width: 100%;
+            border-radius: 16px;
+            opacity: 0.8;
+        }
+        
+        /* ========== КАК ЭТО РАБОТАЕТ ========== */
+        .steps {
+            background: #0f0f17;
+            padding: 80px 32px;
+            text-align: center;
+        }
+        .steps h2 {
+            font-size: 36px;
+            color: #ffd966;
+            margin-bottom: 16px;
+        }
+        .steps-sub {
+            color: #aaa;
+            margin-bottom: 48px;
+        }
+        .steps-grid {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .step-card {
+            background: #1e1f2c;
+            border-radius: 24px;
+            padding: 32px;
+            width: 280px;
+            text-align: center;
+            border: 1px solid #2d2d3a;
+            transition: 0.2s;
+        }
+        .step-card:hover {
+            transform: translateY(-5px);
+            border-color: #ffd966;
+        }
+        .step-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        .step-card h3 {
+            color: #ffd966;
+            margin-bottom: 12px;
+        }
+        .step-card p {
+            color: #aaa;
+            font-size: 14px;
+        }
+        
+        /* ========== ПРЕИМУЩЕСТВА ========== */
+        .features {
+            padding: 80px 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .features h2 {
+            text-align: center;
+            font-size: 36px;
+            color: #ffd966;
+            margin-bottom: 48px;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        .feature-item {
+            background: #1e1f2c;
+            border-radius: 20px;
+            padding: 24px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            border: 1px solid #2d2d3a;
+        }
+        .feature-icon {
+            font-size: 32px;
+        }
+        .feature-item h3 {
+            color: #ffd966;
+            margin-bottom: 8px;
+        }
+        .feature-item p {
+            color: #aaa;
+            font-size: 14px;
+        }
+        
+        /* ========== ТАРИФЫ ========== */
+        .pricing {
+            background: #0f0f17;
+            padding: 80px 32px;
+            text-align: center;
+        }
+        .pricing h2 {
+            font-size: 36px;
+            color: #ffd966;
+            margin-bottom: 48px;
+        }
+        .pricing-grid {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .pricing-card {
+            background: #1e1f2c;
+            border-radius: 24px;
+            padding: 32px;
+            width: 320px;
+            border: 1px solid #2d2d3a;
+        }
+        .pricing-card.premium {
+            border-color: #ffd966;
+            transform: scale(1.02);
+        }
+        .pricing-card h3 {
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+        .price {
+            font-size: 48px;
+            font-weight: bold;
+            color: #ffd966;
+            margin: 20px 0;
+        }
+        .price small {
+            font-size: 14px;
+            color: #aaa;
+        }
+        .pricing-card ul {
+            list-style: none;
+            margin: 24px 0;
+            text-align: left;
+        }
+        .pricing-card li {
+            padding: 8px 0;
+            color: #ccc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .pricing-card li:before {
+            content: "✅";
+        }
+        .btn-price {
+            background: #ffd966;
+            color: #0f0f17;
+            padding: 12px 24px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            width: 100%;
+            margin-top: 16px;
+        }
+        
+        /* ========== CTA ========== */
+        .cta {
+            padding: 80px 32px;
+            text-align: center;
+            background: linear-gradient(135deg, #1e1f2c 0%, #0a0c12 100%);
+        }
+        .cta h2 {
+            font-size: 36px;
+            margin-bottom: 16px;
+        }
+        .cta p {
+            color: #aaa;
+            margin-bottom: 32px;
+        }
+        
+        /* ========== ФУТЕР ========== */
+        .footer {
+            background: #0f0f17;
+            border-top: 1px solid #2d2d3a;
+            padding: 32px;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+        .footer a {
+            color: #ffd966;
+            text-decoration: none;
+        }
+        
+        @media (max-width: 700px) {
+            .navbar { flex-direction: column; padding: 16px; }
+            .nav-links { gap: 20px; }
+            .hero { flex-direction: column; text-align: center; padding: 40px 20px; }
+            .hero-content h1 { font-size: 36px; }
+            .hero-buttons { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
 
-      const firebaseConfig = {
-  apiKey: "AIzaSyD6yOEzDsQhz4alUwscnFGwTBnsdMNUB0E",
-  authDomain: "fnlandcalc.firebaseapp.com",
-  projectId: "fnlandcalc",
-  storageBucket: "fnlandcalc.firebasestorage.app",
-  messagingSenderId: "1026167412655",
-  appId: "1:1026167412655:web:3372b910043c27a145015a"
-};
+<!-- ШАПКА -->
+<nav class="navbar">
+    <div class="logo">
+        <h1>🎯 Fortnite Landing</h1>
+        <p>калькулятор лендинга</p>
+    </div>
+    <div class="nav-links">
+        <a href="/">Главная</a>
+        <a href="/dashboard">Карта</a>
+        <a href="/premium">Premium</a>
+        <a href="/profile">Профиль</a>
+    </div>
+    <a href="/dashboard" class="btn-nav">🚀 Начать сейчас</a>
+</nav>
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const googleProvider = new GoogleAuthProvider();
+<!-- ГЛАВНЫЙ ЭКРАН -->
+<section class="hero">
+    <div class="hero-content">
+        <h1>ВЫПРЫГИВАЙ ПЕРВЫМ</h1>
+        <p>Точный расчёт места прыжка и раскрытия дельтаплана. Учитывает траекторию автобуса, угол подлёта и рельеф карты.</p>
+        <div class="hero-buttons">
+            <a href="/dashboard" class="btn-primary">🎮 Попробовать бесплатно</a>
+            <a href="/premium" class="btn-secondary">💎 Премиум доступ</a>
+        </div>
+    </div>
+    <div class="hero-preview">
+        <img src="map.png" alt="Fortnite Map Preview">
+        <p style="text-align: center; margin-top: 12px; color: #aaa; font-size: 12px;">Интерактивная карта Chapter 7 Season 2</p>
+    </div>
+</section>
 
-        // DOM элементы
-        const authPanel = document.getElementById('authPanel');
-        const calculatorPanel = document.getElementById('calculatorPanel');
-        const userInfo = document.getElementById('userInfo');
-        const userNameSpan = document.getElementById('userName');
-        const userAvatar = document.getElementById('userAvatar');
-        const userEmailSpan = document.getElementById('userEmail');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const discordLoginBtn = document.getElementById('discordLogin');
-        const googleLoginBtn = document.getElementById('googleLogin');
-        const epicLoginBtn = document.getElementById('epicLogin');
-        const loginSubmit = document.getElementById('loginSubmit');
+<!-- КАК ЭТО РАБОТАЕТ -->
+<section class="steps">
+    <h2>Как это работает</h2>
+    <p class="steps-sub">Всего 3 клика — и ты знаешь, где выпрыгнуть</p>
+    <div class="steps-grid">
+        <div class="step-card">
+            <div class="step-icon">🚌</div>
+            <h3>1. Маршрут автобуса</h3>
+            <p>Кликни на карте старт и финиш автобуса</p>
+        </div>
+        <div class="step-card">
+            <div class="step-icon">🎯</div>
+            <h3>2. Точка приземления</h3>
+            <p>Укажи место, куда хочешь сесть</p>
+        </div>
+        <div class="step-card">
+            <div class="step-icon">🔴</div>
+            <h3>3. Расчёт</h3>
+            <p>Калькулятор покажет идеальную точку прыжка</p>
+        </div>
+    </div>
+</section>
+
+<!-- ПРЕИМУЩЕСТВА -->
+<section class="features">
+    <h2>Почему выбирают нас</h2>
+    <div class="features-grid">
+        <div class="feature-item">
+            <div class="feature-icon">🎯</div>
+            <div>
+                <h3>Точность до метра</h3>
+                <p>Учитываем реальную физику падения и угол подлёта</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">🗺️</div>
+            <div>
+                <h3>Актуальная карта</h3>
+                <p>Chapter 7 Season 2 — все новые POI</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">⚡</div>
+            <div>
+                <h3>Мгновенный расчёт</h3>
+                <p>Результат за доли секунды</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">🔄</div>
+            <div>
+                <h3>Редактируемая траектория</h3>
+                <p>Тяни за кружочки — перестраивай маршрут</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">💾</div>
+            <div>
+                <h3>Сохранение маршрутов</h3>
+                <p>Сохраняй удачные точки (премиум)</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">📊</div>
+            <div>
+                <h3>Статистика</h3>
+                <p>Анализируй свои прыжки</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ТАРИФЫ -->
+<section class="pricing">
+    <h2>Выбери свой тариф</h2>
+    <div class="pricing-grid">
+        <div class="pricing-card">
+            <h3>Бесплатный</h3>
+            <div class="price">0 ₽<small>/мес</small></div>
+            <ul>
+                <li>Базовый расчёт точки прыжка</li>
+                <li>Карта со всеми POI</li>
+                <li>3 клика для расчёта</li>
+                <li>До 5 маршрутов в день</li>
+            </ul>
+            <a href="/dashboard" class="btn-price">Начать</a>
+        </div>
+        <div class="pricing-card premium">
+            <h3>⭐ Премиум</h3>
+            <div class="price">500 ₽<small>/мес</small></div>
+            <ul>
+                <li>Неограниченное количество маршрутов</li>
+                <li>Сохранение маршрутов</li>
+                <li>Экспорт в JSON/CSV</li>
+                <li>Приоритетная поддержка</li>
+                <li>Доступ к бета-функциям</li>
+            </ul>
+            <a href="/premium" class="btn-price">Купить подписку</a>
+        </div>
+    </div>
+</section>
+
+<!-- ПРИЗЫВ К ДЕЙСТВИЮ -->
+<section class="cta">
+    <h2>Готов доминировать в небе?</h2>
+    <p>Присоединяйся к тысячам игроков, которые уже используют наш калькулятор</p>
+    <a href="/dashboard" class="btn-primary" style="font-size: 18px;">🚀 Начать сейчас →</a>
+</section>
+
+<!-- ФУТЕР -->
+<footer class="footer">
+    <p>Fortnite Landing Calculator — независимый проект, не связан с Epic Games</p>
+    <p style="margin-top: 8px;">Fortnite Chapter 7 Season 2 | <a href="/privacy">Политика конфиденциальности</a> | <a href="/terms">Пользовательское соглашение</a></p>
+</footer>
+
+</body>
+</html>        const loginSubmit = document.getElementById('loginSubmit');
         const registerSubmit = document.getElementById('registerSubmit');
         const showRegister = document.getElementById('showRegister');
         const showLogin = document.getElementById('showLogin');
