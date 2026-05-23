@@ -20,7 +20,7 @@
             padding: 40px;
         }
         .premium-container {
-            max-width: 600px;
+            max-width: 650px;
             width: 100%;
         }
         .premium-card {
@@ -63,13 +63,68 @@
             position: absolute;
             left: 0;
         }
-        .cc-payment-button {
+        .payment-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin: 32px 0;
+        }
+        .payment-method {
+            background: #2a2b3a;
+            border-radius: 24px;
+            padding: 20px;
+            border: 1px solid #3d3e52;
+        }
+        .payment-method h3 {
+            color: #ffd966;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+        .payment-method p {
+            color: #aaa;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+        .btn {
+            border: none;
+            padding: 14px 28px;
+            border-radius: 60px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
             width: 100%;
-            margin-top: 20px;
+            transition: 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        .btn-crypto {
+            background: #ffd966;
+            color: #0f0f17;
+        }
+        .btn-crypto:hover {
+            transform: scale(1.02);
+            background: #ffcc33;
+        }
+        .btn-yoomoney {
+            background: #1a4d8c;
+            color: white;
+        }
+        .btn-yoomoney:hover {
+            transform: scale(1.02);
+            background: #1a5a9e;
+        }
+        .btn-activate {
+            background: #2a2b3a;
+            color: #ffd966;
+            margin-top: 16px;
+        }
+        .btn-activate:hover {
+            background: #3a3b4e;
         }
         .crypto-icons {
-            margin-top: 24px;
-            font-size: 28px;
+            margin-top: 16px;
+            font-size: 24px;
             color: #aaa;
         }
         .back-link {
@@ -77,26 +132,6 @@
             margin-top: 24px;
             color: #ffd966;
             text-decoration: none;
-        }
-        .activate-section {
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 1px solid #2d2d3a;
-        }
-        .btn-activate {
-            background: #2a2b3a;
-            color: #ffd966;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 60px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            transition: 0.2s;
-        }
-        .btn-activate:hover {
-            background: #3a3b4e;
         }
         .success-msg {
             color: #88ff88;
@@ -106,6 +141,10 @@
             background: rgba(0,255,0,0.1);
             border-radius: 12px;
             display: none;
+        }
+        hr {
+            border-color: #2d2d3a;
+            margin: 10px 0;
         }
         @media (max-width: 600px) {
             body { padding: 20px; }
@@ -133,31 +172,81 @@
             <li>Экспорт маршрутов в JSON</li>
         </ul>
 
-        <!-- Виджет CryptoCloud -->
-        <button class="cc-payment-button"></button>
+        <div class="payment-methods">
+            <!-- Способ 1: ЮMoney (карта/СБП) -->
+            <div class="payment-method">
+                <h3>💳 Банковская карта / СБП</h3>
+                <p>Оплата через ЮMoney — быстро и безопасно</p>
+                <form id="yoomoneyForm" method="POST" action="https://yoomoney.ru/quickpay/confirm">
+                    <input type="hidden" name="receiver" value="4100112345678910">
+                    <input type="hidden" name="quickpay-form" value="button">
+                    <input type="hidden" name="sum" value="500">
+                    <input type="hidden" name="label" value="premium_subscription">
+                    <input type="hidden" name="successURL" value="https://fortnite-landing-calculator.onrender.com/success">
+                    <input type="hidden" name="paymentType" id="yoomoneyPaymentType" value="AC">
+                    <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                        <label style="display: flex; align-items: center; gap: 6px; color: #ccc; cursor: pointer;">
+                            <input type="radio" name="paymentTypeRadio" value="AC" checked> 💳 Банковская карта
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; color: #ccc; cursor: pointer;">
+                            <input type="radio" name="paymentTypeRadio" value="PC"> 💰 Кошелек ЮMoney
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-yoomoney" id="yoomoneyPayBtn">💳 Оплатить 500 ₽</button>
+                </form>
+            </div>
 
-        <div class="crypto-icons">
-            ₿ 🟡 Ξ 💎
+            <hr>
+
+            <!-- Способ 2: CryptoCloud (криптовалюта) -->
+            <div class="payment-method">
+                <h3>₿ Криптовалюта</h3>
+                <p>USDT, BTC, ETH и другие криптовалюты</p>
+                <button class="cc-payment-button"></button>
+                <div class="crypto-icons">
+                    ₿ 🟡 Ξ 💎
+                </div>
+            </div>
         </div>
-        <p style="font-size: 11px; color: #555; margin-top: 20px;">
-            Принимаем USDT, BTC, ETH и другие криптовалюты.
-        </p>
 
         <!-- Кнопка активации после оплаты -->
-        <div class="activate-section">
-            <p style="color: #aaa; font-size: 13px; margin-bottom: 12px;">Уже оплатили?</p>
-            <button id="activateBtn" class="btn-activate">✅ Я оплатил (активировать доступ)</button>
-            <div id="successMsg" class="success-msg"></div>
-        </div>
+        <button id="activateBtn" class="btn btn-activate">
+            ✅ Я оплатил (активировать доступ)
+        </button>
+        <div id="successMsg" class="success-msg"></div>
 
         <a href="/dashboard" class="back-link">← Вернуться в калькулятор</a>
     </div>
 </div>
 
-<!-- Скрипт виджета CryptoCloud -->
+<!-- CryptoCloud виджет -->
 <script defer src="https://cdn.cryptocloud.plus/widget/v1/widget.js"></script>
 <script>
-    // Инициализация виджета после загрузки DOM
+    // ========== НАСТРОЙКИ ==========
+    // ЮMoney: номер кошелька (ЗАМЕНИ НА СВОЙ!)
+    const YOOMONEY_RECEIVER = '4100119538446718';  // ← сюда вставь свой номер кошелька ЮMoney
+    
+    // ========== ИНИЦИАЛИЗАЦИЯ ВИДЖЕТОВ ==========
+    
+    // 1. Настройка ЮMoney формы
+    const yoomoneyForm = document.getElementById('yoomoneyForm');
+    const yoomoneyPaymentTypeHidden = document.getElementById('yoomoneyPaymentType');
+    const radioButtons = document.querySelectorAll('input[name="paymentTypeRadio"]');
+    
+    // Обновляем скрытое поле при выборе способа оплаты
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', () => {
+            yoomoneyPaymentTypeHidden.value = radio.value;
+        });
+    });
+    
+    // Устанавливаем номер получателя
+    const receiverInput = document.querySelector('input[name="receiver"]');
+    if (receiverInput) {
+        receiverInput.value = YOOMONEY_RECEIVER;
+    }
+    
+    // 2. CryptoCloud виджет
     document.addEventListener("DOMContentLoaded", function() {
         if (window.CryptoCloudWidget) {
             window.CryptoCloudWidget.CreateInvoiceButton({
@@ -166,10 +255,9 @@
                 text: "💎 Оплатить криптовалютой",
                 amount: 500,
                 currency: "RUB",
-                shop_id: "2bK0J89q9avkghEU",
+                shop_id: "2bK0J89q9avkghEU",  // ← замени на свой shop_id
                 locale: "ru",
                 onSuccess: function() {
-                    // При успешной оплате показываем сообщение
                     localStorage.setItem('fortnite_subscription', 'active');
                     localStorage.setItem('subscription_start', Date.now());
                     alert('✅ Оплата прошла успешно! Доступ активирован.');
@@ -180,8 +268,8 @@
             console.error('CryptoCloud виджет не загрузился');
         }
     });
-
-    // Кнопка ручной активации (на случай, если автоматическая не сработала)
+    
+    // ========== РУЧНАЯ АКТИВАЦИЯ ==========
     const activateBtn = document.getElementById('activateBtn');
     const successMsg = document.getElementById('successMsg');
     
@@ -197,13 +285,21 @@
         });
     }
     
-    // Проверка существующей подписки
+    // ========== ПРОВЕРКА СУЩЕСТВУЮЩЕЙ ПОДПИСКИ ==========
     if (localStorage.getItem('fortnite_subscription') === 'active') {
-        successMsg.textContent = '✅ У вас уже есть активная подписка!';
-        successMsg.style.display = 'block';
-        setTimeout(() => {
-            window.location.href = '/dashboard';
-        }, 2000);
+        const start = parseInt(localStorage.getItem('subscription_start'));
+        const isExpired = start && (Date.now() - start > 30 * 24 * 60 * 60 * 1000);
+        if (!isExpired) {
+            successMsg.textContent = '✅ У вас уже есть активная подписка! Перенаправление...';
+            successMsg.style.display = 'block';
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 2000);
+        } else {
+            // Подписка истекла
+            localStorage.removeItem('fortnite_subscription');
+            localStorage.removeItem('subscription_start');
+        }
     }
 </script>
 </body>
