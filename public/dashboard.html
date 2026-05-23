@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Калькулятор</title>
+    <style>
+        body {
+            background: #0a0c12;
+            color: white;
+            font-family: monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+        }
+        .premium-badge {
+            background: #ffd966;
+            color: #0f0f17;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+        .expiry {
+            color: #aaa;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="premium-badge">⭐ ПРЕМИУМ АКТИВЕН</div>
+    <h1>🗺️ Калькулятор лендинга</h1>
+    <p>Твой полный доступ к карте, маршрутам и меткам</p>
+    <div class="expiry" id="expiryInfo"></div>
+    <a href="/premium" style="color: #ffd966;">💎 Продлить подписку</a> | 
+    <a href="/logout" style="color: #ff8888;">🚪 Выйти</a>
+</div>
+
+<script>
+    // Проверка статуса подписки
+    const isSubscribed = localStorage.getItem('fortnite_subscription') === 'active';
+    if (!isSubscribed) {
+        window.location.href = '/premium';
+    }
+    
+    // Сохраняем дату активации
+    if (!localStorage.getItem('subscription_start')) {
+        localStorage.setItem('subscription_start', Date.now());
+    }
+    
+    const start = parseInt(localStorage.getItem('subscription_start'));
+    const expiry = new Date(start + 30 * 24 * 60 * 60 * 1000);
+    document.getElementById('expiryInfo').innerHTML = `Действует до: ${expiry.toLocaleDateString()}`;
+</script>
+</body>
+</html>

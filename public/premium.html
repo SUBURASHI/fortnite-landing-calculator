@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Премиум подписка — Fortnite Landing Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0a0c12;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+        .premium-container {
+            max-width: 600px;
+            width: 100%;
+        }
+        .premium-card {
+            background: #1e1f2c;
+            border-radius: 32px;
+            padding: 48px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.5);
+            text-align: center;
+            border: 1px solid rgba(255,215,0,0.2);
+        }
+        h1 {
+            color: #ffd966;
+            font-size: 32px;
+            margin-bottom: 16px;
+        }
+        .price {
+            font-size: 48px;
+            font-weight: bold;
+            color: #ffd966;
+            margin: 24px 0;
+        }
+        .price small {
+            font-size: 18px;
+            color: #aaa;
+        }
+        .features {
+            text-align: left;
+            margin: 32px 0;
+            padding: 0 20px;
+        }
+        .features li {
+            color: #ccc;
+            margin: 12px 0;
+            list-style: none;
+            padding-left: 28px;
+            position: relative;
+        }
+        .features li:before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+        }
+        .btn-pay {
+            background: #ffd966;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 60px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+            color: #0f0f17;
+        }
+        .btn-pay:hover {
+            transform: scale(1.02);
+            background: #ffcc33;
+        }
+        .crypto-icons {
+            margin-top: 24px;
+            font-size: 28px;
+            color: #aaa;
+        }
+        .back-link {
+            display: block;
+            margin-top: 24px;
+            color: #ffd966;
+            text-decoration: none;
+        }
+        .error-msg {
+            color: #ff8888;
+            font-size: 12px;
+            margin-top: 16px;
+            display: none;
+        }
+        @media (max-width: 600px) {
+            body { padding: 20px; }
+            .premium-card { padding: 32px; }
+            .price { font-size: 36px; }
+        }
+    </style>
+</head>
+<body>
+<div class="premium-container">
+    <div class="premium-card">
+        <h1>🎯 Премиум доступ</h1>
+        <p style="color: #aaa;">Полный калькулятор лендинга для Fortnite</p>
+
+        <div class="price">
+            500 ₽ <small>/ месяц</small>
+        </div>
+
+        <ul class="features">
+            <li>Интерактивная карта Chapter 7 Season 2</li>
+            <li>Построение маршрута автобуса</li>
+            <li>Точки раскрытия дельтаплана (база меток)</li>
+            <li>Расчёт оптимальной точки прыжка</li>
+            <li>Сохранение истории расчётов</li>
+            <li>Экспорт маршрутов в JSON</li>
+        </ul>
+
+        <button id="payBtn" class="btn-pay">💎 Оплатить криптовалютой</button>
+        <div id="errorMsg" class="error-msg"></div>
+
+        <div class="crypto-icons">
+            ₿ 🟡 Ξ 💎
+        </div>
+        <p style="font-size: 11px; color: #555; margin-top: 20px;">
+            Принимаем USDT, BTC, ETH и другие криптовалюты.<br>
+            После оплаты доступ активируется автоматически.
+        </p>
+        <a href="/dashboard" class="back-link">← Вернуться в калькулятор</a>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const payBtn = document.getElementById('payBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        
+        // Функция для отображения ошибок
+        function showError(text) {
+            errorMsg.textContent = text;
+            errorMsg.style.display = 'block';
+            setTimeout(() => {
+                errorMsg.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Загружаем CryptoCloud виджет
+        const script = document.createElement('script');
+        script.src = 'https://widget.cryptocloud.plus/v2/widget.js';
+        script.async = true;
+        
+        script.onload = () => {
+            if (typeof CryptoCloudWidget !== 'undefined') {
+                // Виджет загружен, готов к работе
+                console.log('✅ CryptoCloud виджет загружен');
+            } else {
+                showError('❌ Ошибка загрузки платёжной системы. Обновите страницу.');
+            }
+        };
+        
+        script.onerror = () => {
+            showError('❌ Не удалось загрузить платёжную систему. Проверьте интернет-соединение.');
+        };
+        
+        document.body.appendChild(script);
+        
+        // Обработчик кнопки оплаты
+        payBtn.addEventListener('click', () => {
+            if (typeof CryptoCloudWidget === 'undefined') {
+                showError('⏳ Платёжная система ещё загружается. Попробуйте через секунду.');
+                return;
+            }
+            
+            try {
+                CryptoCloudWidget.createInvoice({
+                    // 🔑 ЗАМЕНИ НА СВОЙ SHOP_ID ИЗ КАБИНЕТА CRYPTOCLOUD
+                    shop_id: 'ТВОЙ_SHOP_ID',
+                    amount: 500,
+                    currency: 'RUB',
+                    order_id: 'sub_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8),
+                    description: 'Подписка на Fortnite Landing Calculator',
+                    lang: 'ru',
+                    theme: 'dark',
+                    onSuccess: function(data) {
+                        console.log('Оплата успешна:', data);
+                        localStorage.setItem('fortnite_subscription', 'active');
+                        localStorage.setItem('subscription_start', Date.now());
+                        window.location.href = '/dashboard?subscription=active';
+                    },
+                    onFail: function(data) {
+                        console.log('Оплата не удалась:', data);
+                        showError('❌ Оплата не была завершена. Попробуйте ещё раз.');
+                    }
+                });
+            } catch (error) {
+                console.error('CryptoCloud error:', error);
+                showError('❌ Ошибка при создании счёта. Попробуйте позже.');
+            }
+        });
+    })();
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Оплата успешна!</title>
+    <style>
+        body {
+            background: #0a0c12;
+            font-family: monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .success {
+            text-align: center;
+            color: #0a0;
+        }
+        a {
+            color: #ffd966;
+        }
+    </style>
+</head>
+<body>
+<div class="success">
+    <h1>✅ Оплата прошла успешно!</h1>
+    <p>Премиум доступ активирован.</p>
+    <a href="/dashboard">→ Перейти в калькулятор</a>
+</div>
+<script>
+    localStorage.setItem('fortnite_subscription', 'active');
+    localStorage.setItem('subscription_start', Date.now());
+</script>
+</body>
+</html>
