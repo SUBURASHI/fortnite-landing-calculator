@@ -10,15 +10,14 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
 
-        // Конфиг Firebase (ЗАМЕНИ НА СВОЙ!)
-        const firebaseConfig = {
-            apiKey: "AIzaSyD6yOEzDsQhz4aLUwscnFGwTBnsdMNUb0E",
-            authDomain: "fnlandcalc.firebaseapp.com",
-            projectId: "fnlandcalc",
-            storageBucket: "fnlandcalc.firebasestorage.app",
-            messagingSenderId: "1026167412655",
-            appId: "1:1026167412655:web:3372b910043c27a145015a"
-        };
+       const firebaseConfig = {
+    apiKey: "AIzaSyD6yOEzDsQhz4aLUwscnFGwTBnsdMNUb0E",
+    authDomain: "fnlandcalc.firebaseapp.com",
+    projectId: "fnlandcalc",
+    storageBucket: "fnlandcalc.firebasestorage.app",
+    messagingSenderId: "1026167412655",
+    appId: "1:1026167412655:web:3372b910043c27a145015a"
+};
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -35,6 +34,344 @@
         const discordLoginBtn = document.getElementById('discordLogin');
         const googleLoginBtn = document.getElementById('googleLogin');
         const epicLoginBtn = document.getElementById('epicLogin');
+        const loginSubmit = document.getElementById('loginSubmit');
+        const registerSubmit = document.getElementById('registerSubmit');
+        const showRegister = document.getElementById('showRegister');
+        const showLogin = document.getElementById('showLogin');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const statusMsg = document.getElementById('statusMsg');
+
+        function showMessage(msg, isError = true) {
+            statusMsg.textContent = msg;
+            statusMsg.style.color = isError ? '#ff8888' : '#88ff88';
+            setTimeout(() => { statusMsg.textContent = ''; }, 4000);
+        }
+
+        // Проверка сессии на сервере (Discord/Epic)
+        async function checkServerSession() {
+            try {
+                const res = await fetch('/api/user');
+                const data = await res.json();
+                if (data.loggedIn) {
+                    showCalculator(data.user);
+                    return true;
+                }
+                return false;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function showCalculator(user) {
+            authPanel.style.display = 'none';
+            calculatorPanel.style.display = 'block';
+            userInfo.style.display = 'flex';
+            userNameSpan.textContent = user.global_name || user.username || user.email;
+            userEmailSpan.textContent = user.email || '';
+            if (user.avatar) {
+                userAvatar.src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
+            } else if (user.provider === 'epic') {
+                userAvatar.src = 'https://cdn.discordapp.com/embed/avatars/0.png';
+            } else {
+                userAvatar.src = 'https://cdn.discordapp.com/embed/avatars/0.png';
+            }
+        }
+
+        function showAuth() {
+            authPanel.style.display = 'block';
+            calculatorPanel.style.display = 'none';
+            userInfo.style.display = 'none';
+        }
+
+        // Вход через Discord (серверный)
+        discordLoginBtn.addEventListener('click', () => {
+            window.location.href = '/auth/discord';
+        });
+
+        // Вход через Epic Games (серверный)
+        epicLoginBtn.addEventListener('click', () => {
+            window.location.href = '/auth/epic';
+        });
+
+        // Вход через Google (Firebase)
+        googleLoginBtn.addEventListener('click', async () => {
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                showMessage(`Добро пожаловать, ${result.user.displayName || result.user.email}!`, false);
+                setTimeout(() => location.reload(), 1500);
+            } catch (error) {
+                showMessage('' + error.message);
+            }
+        });
+
+        // Вход по email/паролю
+        loginSubmit.addEventListener('click', async () => {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            if (!email || !password) {
+                showMessage('Заполните email и пароль');
+                return;
+            }
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                showMessage('Вход выполнен!', false);
+                setTimeout(() => location.reload(), 1500);
+            } catch (error) {
+                showMessage('' + (error.code === 'auth/invalid-credential' ? 'Неверный email или пароль' : error.message));
+            }
+        });
+
+        // Регистрация
+        registerSubmit.addEventListener('click', async () => {
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            if (!email || !password) {
+                showMessage('Заполните email и пароль');
+                return;
+            }
+            if (password.length < 6) {
+                showMessage('Пароль должен быть не менее 6 символов');
+                return;
+            }
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                await sendEmailVerification(userCredential.user);
+                showMessage('Регистрация успешна! Подтвердите email по ссылке в письме', false);
+                setTimeout(() => location.reload(), 3000);
+            } catch (error) {
+                showMessage('' + (error.code === 'auth/email-already-in-use' ? 'Этот email уже зарегистрирован' : error.message));
+            }
+        });
+
+        // Переключение форм
+        showRegister?.addEventListener('click', () => {
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'block';
+        });
+        showLogin?.addEventListener('click', () => {
+            registerForm.style.display = 'none';
+            loginForm.style.display = 'block';
+        });
+
+        // Выход
+        logoutBtn.addEventListener('click', async () => {
+            if (auth.currentUser) {
+                await signOut(auth);
+            }
+            window.location.href = '/logout';
+        });
+
+        // Главная проверка
+        onAuthStateChanged(auth, async (firebaseUser) => {
+            const serverSession = await checkServerSession();
+            if (firebaseUser && !serverSession) {
+                showCalculator({
+                    username: firebaseUser.displayName,
+                    email: firebaseUser.email,
+                    avatar: null,
+                    id: firebaseUser.uid,
+                    global_name: firebaseUser.displayName,
+                    provider: 'firebase'
+                });
+            } else if (!firebaseUser && !serverSession) {
+                showAuth();
+            }
+        });
+
+        checkServerSession();
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0a0c12;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 500px;
+            width: 90%;
+            margin: 40px auto;
+        }
+        .panel {
+            background: #1e1f2c;
+            border-radius: 32px;
+            padding: 40px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        h1 {
+            color: #ffd966;
+            margin-bottom: 24px;
+            font-size: 28px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: 0.2s;
+        }
+        .btn-discord {
+            background: #5865F2;
+            color: white;
+        }
+        .btn-google {
+            background: #4285f4;
+            color: white;
+        }
+        .btn-epic {
+            background: #171717;
+            color: white;
+        }
+        .btn-primary {
+            background: #ffd966;
+            color: #0f0f17;
+        }
+        .btn-secondary {
+            background: #2a2b3a;
+            color: #ccc;
+        }
+        .auth-divider {
+            margin: 20px 0;
+            text-align: center;
+            border-top: 1px solid #2d2d3a;
+            position: relative;
+        }
+        .auth-divider span {
+            background: #1e1f2c;
+            padding: 0 10px;
+            position: relative;
+            top: -10px;
+            color: #aaa;
+        }
+        .auth-form input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: #2a2b3a;
+            border: 1px solid #3d3e52;
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+        }
+        .toggle-auth {
+            margin-top: 16px;
+            font-size: 13px;
+            color: #aaa;
+        }
+        .toggle-auth a {
+            color: #ffd966;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding: 16px;
+            background: #2a2b3a;
+            border-radius: 24px;
+        }
+        .user-info img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+        .user-info h3 {
+            color: #ffd966;
+            font-size: 16px;
+        }
+        .user-info p {
+            color: #aaa;
+            font-size: 12px;
+        }
+        .calculator-placeholder {
+            margin-top: 24px;
+            padding: 32px;
+            background: #2a2b3a;
+            border-radius: 24px;
+            text-align: center;
+            color: #ccc;
+        }
+        #statusMsg {
+            margin-top: 16px;
+            font-size: 12px;
+            min-height: 40px;
+        }
+        @media (max-width: 600px) {
+            .panel { padding: 24px; }
+            h1 { font-size: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Панель авторизации -->
+    <div id="authPanel" class="panel">
+        <h1>Fortnite Landing Calculator</h1>
+        <p style="color: #ccc; margin-bottom: 24px;">Войдите, чтобы использовать калькулятор</p>
+
+        <button id="discordLogin" class="btn btn-discord">Войти через Discord</button>
+        <button id="epicLogin" class="btn btn-epic">Войти через Epic Games</button>
+        <button id="googleLogin" class="btn btn-google">Войти через Google</button>
+
+        <div class="auth-divider"><span>или</span></div>
+
+        <div id="loginForm" class="auth-form">
+            <input type="email" id="loginEmail" placeholder="Email">
+            <input type="password" id="loginPassword" placeholder="Пароль">
+            <button id="loginSubmit" class="btn btn-primary">Войти</button>
+            <div class="toggle-auth">Нет аккаунта? <a id="showRegister">Зарегистрироваться</a></div>
+        </div>
+
+        <div id="registerForm" class="auth-form" style="display: none;">
+            <input type="email" id="registerEmail" placeholder="Email">
+            <input type="password" id="registerPassword" placeholder="Пароль (мин. 6 символов)">
+            <button id="registerSubmit" class="btn btn-primary">Зарегистрироваться</button>
+            <div class="toggle-auth">Уже есть аккаунт? <a id="showLogin">Войти</a></div>
+        </div>
+
+        <div id="statusMsg"></div>
+    </div>
+
+    <!-- Панель калькулятора (после входа) -->
+    <div id="calculatorPanel" class="panel" style="display: none;">
+        <div id="userInfo" class="user-info" style="display: none;">
+            <img id="userAvatar" src="" alt="Avatar">
+            <div>
+                <h3 id="userName"></h3>
+                <p id="userEmail"></p>
+            </div>
+        </div>
+
+        <h1>Fortnite Landing Calculator</h1>
+
+        <div class="calculator-placeholder">
+             Ты авторизован!<br><br>
+        </div>
+
+        <button id="logoutBtn" class="btn btn-secondary" style="margin-top: 24px;">🚪 Выйти</button>
+    </div>
+</div>
+
+</body>
+</html>        const epicLoginBtn = document.getElementById('epicLogin');
         const loginSubmit = document.getElementById('loginSubmit');
         const registerSubmit = document.getElementById('registerSubmit');
         const showRegister = document.getElementById('showRegister');
