@@ -1,61 +1,857 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>Калькулятор</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Fortnite Landing — Калькулятор лендинга</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
         body {
             background: #0a0c12;
-            color: white;
-            font-family: monospace;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
             height: 100vh;
         }
-        .container {
-            text-align: center;
+        
+        /* ========== ШАПКА ========== */
+        .navbar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 40;
+            background: rgba(15, 15, 23, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(45, 45, 58, 0.5);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
         }
-        .premium-badge {
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+        .logo h1 {
+            color: #ffd966;
+            font-size: 20px;
+        }
+        .logo p {
+            color: #aaa;
+            font-size: 10px;
+            margin-top: 2px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 24px;
+        }
+        .nav-links a {
+            color: #ccc;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            color: #ffd966;
+        }
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn-login, .btn-signup {
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+        .btn-login {
+            background: transparent;
+            color: #ffd966;
+            border: 1px solid #ffd966;
+        }
+        .btn-login:hover {
+            background: rgba(255,217,102,0.1);
+        }
+        .btn-signup {
             background: #ffd966;
             color: #0f0f17;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            margin-bottom: 20px;
-            display: inline-block;
         }
-        .expiry {
-            color: #aaa;
+        .btn-signup:hover {
+            background: #ffcc33;
+            transform: scale(1.02);
+        }
+        .user-menu {
+            position: relative;
+            cursor: pointer;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #ffd966;
+            object-fit: cover;
+        }
+        .dropdown-menu {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background: #1e1f2c;
+            border-radius: 16px;
+            min-width: 200px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border: 1px solid #2d2d3a;
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.2s;
+            z-index: 100;
+        }
+        .user-menu.active .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+        }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #ddd;
+            text-decoration: none;
+            transition: 0.1s;
+            border-bottom: 1px solid #2d2d3a;
+        }
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        .dropdown-item:hover {
+            background: #2a2b3a;
+            color: #ffd966;
+        }
+        .dropdown-item.logout {
+            color: #ff8888;
+        }
+        
+        /* КАРТА */
+        .map-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0b0c14;
+            overflow: hidden;
+            cursor: grab;
+            z-index: 1;
+        }
+        .map-container:active { cursor: grabbing; }
+        .map-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: 0 0;
+            pointer-events: none;
+            will-change: transform;
+        }
+        .overlay-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: 0 0;
+            pointer-events: none;
+            will-change: transform;
+        }
+        
+        .marker {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            pointer-events: auto;
+            cursor: pointer;
+            font-size: 22px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            white-space: nowrap;
+            background: rgba(0,0,0,0.5);
+            border-radius: 20px;
+            padding: 2px 8px;
+        }
+        .arrow-line {
+            position: absolute;
+            height: 4px;
+            background: repeating-linear-gradient(90deg, #ffcc33, #ffcc33 15px, rgba(0,0,0,0) 15px, rgba(0,0,0,0) 30px);
+            transform-origin: 0 0;
+            border-radius: 2px;
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+        .drag-handle {
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: #ffcc33;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: grab;
+            box-shadow: 0 0 8px rgba(0,0,0,0.5);
+            pointer-events: auto;
+        }
+        .drag-handle:active { cursor: grabbing; transform: translate(-50%, -50%) scale(1.2); }
+        
+        .zoom-controls {
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            padding: 8px;
+            border-radius: 40px;
+            display: flex;
+            gap: 8px;
+            z-index: 25;
+        }
+        .zoom-controls button {
+            background: #ffd966;
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 38px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .zoom-level {
+            background: #1e1f2c;
+            color: #ffd966;
+            padding: 0 14px;
+            border-radius: 38px;
+            display: flex;
+            align-items: center;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .coords {
+            position: absolute;
+            bottom: 80px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            padding: 6px 14px;
+            border-radius: 24px;
+            color: #ffd966;
+            font-family: monospace;
             font-size: 12px;
-            margin-top: 20px;
+            z-index: 25;
+            pointer-events: none;
+        }
+        
+        .action-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 35;
+            display: flex;
+            gap: 16px;
+            background: rgba(15, 15, 23, 0.9);
+            backdrop-filter: blur(12px);
+            padding: 10px 24px;
+            border-radius: 60px;
+            border: 1px solid rgba(45, 45, 58, 0.5);
+        }
+        .btn {
+            border: none;
+            padding: 8px 24px;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.1s;
+        }
+        .btn-reset {
+            background: #2a2b3a;
+            color: #ff8888;
+        }
+        .btn-calc {
+            background: #ffd966;
+            color: #0f0f17;
+        }
+        .btn:hover { transform: scale(1.02); }
+        .btn:active { transform: scale(0.98); }
+        
+        .footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 30;
+            background: rgba(15, 15, 23, 0.85);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(45, 45, 58, 0.5);
+            padding: 6px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            font-size: 10px;
+            color: #ccc;
+        }
+        .legend { display: flex; gap: 16px; flex-wrap: wrap; }
+        .legend span { display: inline-flex; align-items: center; gap: 4px; }
+        
+        @media (max-width: 700px) {
+            .navbar { flex-direction: column; }
+            .nav-left { flex-direction: column; text-align: center; }
+            .nav-links { justify-content: center; }
+            .zoom-controls { bottom: 70px; right: 12px; }
+            .coords { bottom: 70px; left: 12px; font-size: 9px; }
+            .action-panel { bottom: 70px; padding: 8px 16px; gap: 10px; }
+            .btn { padding: 6px 16px; font-size: 12px; }
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="premium-badge">⭐ ПРЕМИУМ АКТИВЕН</div>
-    <h1>🗺️ Калькулятор лендинга</h1>
-    <p>Твой полный доступ к карте, маршрутам и меткам</p>
-    <div class="expiry" id="expiryInfo"></div>
-    <a href="/premium" style="color: #ffd966;">💎 Продлить подписку</a> | 
-    <a href="/logout" style="color: #ff8888;">🚪 Выйти</a>
+
+<!-- ШАПКА -->
+<nav class="navbar">
+    <div class="nav-left">
+        <div class="logo">
+            <h1>🎯 Fortnite Landing</h1>
+            <p>калькулятор лендинга</p>
+        </div>
+        <div class="nav-links">
+            <a href="/">🏠 Главная</a>
+            <a href="/dashboard" class="active">🗺️ Карта</a>
+            <a href="/premium">💎 Premium</a>
+            <a href="/about">ℹ️ О проекте</a>
+            <a href="/profile">👤 Профиль</a>
+        </div>
+    </div>
+    <div class="nav-right" id="navRight">
+        <!-- Сюда динамически подставляются кнопки входа/аватар -->
+    </div>
+</nav>
+
+<!-- КАРТА -->
+<div class="map-container" id="mapContainer">
+    <img id="mapImage" class="map-image" src="map.png" alt="Fortnite Map">
+    <div id="overlayLayer" class="overlay-layer"></div>
+    <div class="zoom-controls">
+        <button id="zoomInBtn">+</button>
+        <span class="zoom-level" id="zoomLevel">100%</span>
+        <button id="zoomOutBtn">−</button>
+    </div>
+    <div class="coords" id="coordsDisplay">📍 X: — , Y: —</div>
+    
+    <div class="action-panel">
+        <button class="btn btn-calc" id="calculateBtn">🧮 Рассчитать</button>
+        <button class="btn btn-reset" id="resetBtn">🗑 Сбросить всё</button>
+    </div>
 </div>
 
+<footer class="footer">
+    <div class="legend">
+        <span>🟡 Жёлтая линия → маршрут автобуса</span>
+        <span>🎯 Синяя метка → приземление</span>
+        <span>🟢 Зелёная метка → раскрытие (выбрана автоматически)</span>
+        <span>🔴 Красная метка → прыжок (рассчитан)</span>
+        <span>🖱️ Тяни за кружочки → редактируй траекторию</span>
+    </div>
+    <div>Fortnite Chapter 7 Season 2 | <a href="/privacy">Политика конфиденциальности</a></div>
+</footer>
+
 <script>
-    // Проверка статуса подписки
-    const isSubscribed = localStorage.getItem('fortnite_subscription') === 'active';
-    if (!isSubscribed) {
-        window.location.href = '/premium';
-    }
-    
-    // Сохраняем дату активации
-    if (!localStorage.getItem('subscription_start')) {
-        localStorage.setItem('subscription_start', Date.now());
-    }
-    
-    const start = parseInt(localStorage.getItem('subscription_start'));
-    const expiry = new Date(start + 30 * 24 * 60 * 60 * 1000);
-    document.getElementById('expiryInfo').innerHTML = `Действует до: ${expiry.toLocaleDateString()}`;
+    (function() {
+        // ========== СОСТОЯНИЕ АВТОРИЗАЦИИ ==========
+        let currentUser = null;
+        
+        async function checkAuth() {
+            try {
+                const res = await fetch('/api/user');
+                const data = await res.json();
+                if (data.loggedIn) {
+                    currentUser = data.user;
+                    updateUI(true);
+                } else {
+                    currentUser = null;
+                    updateUI(false);
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                updateUI(false);
+            }
+        }
+        
+        function updateUI(isLoggedIn) {
+            const navRight = document.getElementById('navRight');
+            if (isLoggedIn && currentUser) {
+                const userName = currentUser.global_name || currentUser.username || currentUser.email;
+                const avatarUrl = currentUser.avatar 
+                    ? `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png`
+                    : 'https://cdn.discordapp.com/embed/avatars/0.png';
+                navRight.innerHTML = `
+                    <div class="user-menu" id="userMenu">
+                        <img class="user-avatar" src="${avatarUrl}" alt="Avatar">
+                        <div class="dropdown-menu">
+                            <a href="/profile" class="dropdown-item">👤 Профиль</a>
+                            <a href="/premium" class="dropdown-item">💎 Подписка</a>
+                            <a href="/dashboard" class="dropdown-item">🗺️ Калькулятор</a>
+                            <a href="#" class="dropdown-item logout" id="logoutBtn">🚪 Выйти</a>
+                        </div>
+                    </div>
+                `;
+                const userMenu = document.getElementById('userMenu');
+                if (userMenu) {
+                    userMenu.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        userMenu.classList.toggle('active');
+                    });
+                    document.addEventListener('click', () => {
+                        userMenu.classList.remove('active');
+                    });
+                }
+                document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+                    await fetch('/logout');
+                    window.location.href = '/';
+                });
+            } else {
+                navRight.innerHTML = `
+                    <a href="/login"><button class="btn-login">Login</button></a>
+                    <a href="/register"><button class="btn-signup">Sign Up</button></a>
+                `;
+            }
+        }
+        
+        // ========== КАЛЬКУЛЯТОР ==========
+        const IMG_URL = 'map.png';
+        const IMG_W = 1280;
+        const IMG_H = 1280;
+        
+        const METERS_PER_PIXEL = 3.906;
+        const MAX_FALL_RANGE_METERS = 63;
+        
+        let glideSpots = [
+            { name: "Tilted Towers — раскрытие",  pixelX: 1237, pixelY: 465 },
+            { name: "Dark Dominion — раскрытие",  pixelX: 910,  pixelY: 380 },
+            { name: "Battlewood Blvd — раскрытие", pixelX: 1450, pixelY: 720 },
+            { name: "Painted Palms — раскрытие",  pixelX: 1580, pixelY: 290 },
+            { name: "Wonkeeland — раскрытие",     pixelX: 770,  pixelY: 650 },
+            { name: "New Sanctuary — раскрытие",   pixelX: 1650, pixelY: 950 }
+        ];
+        
+        const container = document.getElementById('mapContainer');
+        const img = document.getElementById('mapImage');
+        const overlayLayer = document.getElementById('overlayLayer');
+        const zoomInBtn = document.getElementById('zoomInBtn');
+        const zoomOutBtn = document.getElementById('zoomOutBtn');
+        const zoomSpan = document.getElementById('zoomLevel');
+        const coordsSpan = document.getElementById('coordsDisplay');
+        const resetBtn = document.getElementById('resetBtn');
+        const calculateBtn = document.getElementById('calculateBtn');
+        
+        let scale = 1;
+        let tx = 0, ty = 0;
+        let isDragging = false;
+        let dragStartX = 0, dragStartY = 0;
+        let dragStartTx = 0, dragStartTy = 0;
+        
+        let busStart = null;
+        let busEnd = null;
+        let landingPoint = null;
+        let selectedGlideSpot = null;
+        let jumpPoint = null;
+        let clickStep = 0;
+        let clickLock = false;
+        
+        let dragHandle = null;
+        let dragHandleType = null;
+        
+        img.style.width = IMG_W + 'px';
+        img.style.height = IMG_H + 'px';
+        img.src = IMG_URL;
+        
+        function screenToImageCoords(screenX, screenY) {
+            const rect = container.getBoundingClientRect();
+            const mouseX = screenX - rect.left;
+            const mouseY = screenY - rect.top;
+            const imgX = (mouseX - tx) / scale;
+            const imgY = (mouseY - ty) / scale;
+            return { x: Math.min(IMG_W, Math.max(0, imgX)), y: Math.min(IMG_H, Math.max(0, imgY)) };
+        }
+        
+        function distance(p1, p2) {
+            return Math.hypot(p1.x - p2.x, p1.y - p2.y);
+        }
+        
+        function findClosestPointOnSegment(A, B, P) {
+            const ax = B.x - A.x, ay = B.y - A.y;
+            if (ax === 0 && ay === 0) return A;
+            const t = ((P.x - A.x) * ax + (P.y - A.y) * ay) / (ax * ax + ay * ay);
+            const clampedT = Math.max(0, Math.min(1, t));
+            return { x: A.x + clampedT * ax, y: A.y + clampedT * ay };
+        }
+        
+        function normalizeVector(dx, dy) {
+            const len = Math.hypot(dx, dy);
+            return len === 0 ? { x: 0, y: 0 } : { x: dx / len, y: dy / len };
+        }
+        
+        function findBestGlideSpot(landingPx, busA, busB) {
+            if (!landingPx || !busA || !busB) return null;
+            let bestSpot = null;
+            let bestScore = Infinity;
+            for (let spot of glideSpots) {
+                const spotPx = { x: spot.pixelX, y: spot.pixelY };
+                const distToLanding = distance(landingPx, spotPx);
+                const closestBusPoint = findClosestPointOnSegment(busA, busB, spotPx);
+                const distFromBusToSpot = distance(closestBusPoint, spotPx);
+                const busDir = normalizeVector(busB.x - busA.x, busB.y - busA.y);
+                const toSpotDir = normalizeVector(spotPx.x - closestBusPoint.x, spotPx.y - closestBusPoint.y);
+                const dot = busDir.x * toSpotDir.x + busDir.y * toSpotDir.y;
+                const angle = Math.acos(Math.min(1, Math.max(-1, dot)));
+                const actualFallRangeMeters = MAX_FALL_RANGE_METERS * Math.cos(angle);
+                const actualFallRangePixels = actualFallRangeMeters / METERS_PER_PIXEL;
+                const isReachable = distFromBusToSpot <= actualFallRangePixels + 5;
+                const isAhead = dot > 0.2;
+                if (!isReachable || !isAhead) continue;
+                if (distToLanding < bestScore) {
+                    bestScore = distToLanding;
+                    bestSpot = spot;
+                }
+            }
+            if (!bestSpot && glideSpots.length > 0) {
+                let fallbackBest = null;
+                let fallbackMinDist = Infinity;
+                for (let spot of glideSpots) {
+                    const d = distance(landingPx, { x: spot.pixelX, y: spot.pixelY });
+                    if (d < fallbackMinDist) {
+                        fallbackMinDist = d;
+                        fallbackBest = spot;
+                    }
+                }
+                return fallbackBest;
+            }
+            return bestSpot;
+        }
+        
+        function computeJumpPoint(busA, busB, glideSpot) {
+            if (!busA || !busB || !glideSpot) return null;
+            const glidePx = { x: glideSpot.pixelX, y: glideSpot.pixelY };
+            const closestBusPoint = findClosestPointOnSegment(busA, busB, glidePx);
+            const busDir = normalizeVector(busB.x - busA.x, busB.y - busA.y);
+            const toSpotDir = normalizeVector(glidePx.x - closestBusPoint.x, glidePx.y - closestBusPoint.y);
+            const dot = busDir.x * toSpotDir.x + busDir.y * toSpotDir.y;
+            const angle = Math.acos(Math.min(1, Math.max(-1, dot)));
+            const actualFallRangeMeters = MAX_FALL_RANGE_METERS * Math.cos(angle);
+            const actualFallRangePixels = actualFallRangeMeters / METERS_PER_PIXEL;
+            return {
+                x: closestBusPoint.x - busDir.x * actualFallRangePixels,
+                y: closestBusPoint.y - busDir.y * actualFallRangePixels
+            };
+        }
+        
+        function calculate() {
+            if (!busStart || !busEnd) {
+                coordsSpan.innerHTML = '❌ Сначала поставь СТАРТ и ФИНИШ автобуса';
+                setTimeout(() => { drawOverlay(); }, 2000);
+                return;
+            }
+            if (!landingPoint) {
+                coordsSpan.innerHTML = '❌ Сначала поставь ТОЧКУ ПРИЗЕМЛЕНИЯ';
+                setTimeout(() => { drawOverlay(); }, 2000);
+                return;
+            }
+            selectedGlideSpot = findBestGlideSpot(landingPoint, busStart, busEnd);
+            if (!selectedGlideSpot) {
+                coordsSpan.innerHTML = '❌ Не найдена подходящая метка раскрытия';
+                setTimeout(() => { drawOverlay(); }, 2000);
+                return;
+            }
+            jumpPoint = computeJumpPoint(busStart, busEnd, selectedGlideSpot);
+            if (!jumpPoint) {
+                coordsSpan.innerHTML = '❌ Ошибка расчёта точки прыжка';
+                setTimeout(() => { drawOverlay(); }, 2000);
+                return;
+            }
+            coordsSpan.innerHTML = '✅ Готово! Красная точка — где выпрыгнуть';
+            drawOverlay();
+        }
+        
+        function drawOverlay() {
+            overlayLayer.innerHTML = '';
+            overlayLayer.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+            
+            if (busStart && busEnd) {
+                const dx = busEnd.x - busStart.x;
+                const dy = busEnd.y - busStart.y;
+                const length = Math.hypot(dx, dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                const lineDiv = document.createElement('div');
+                lineDiv.className = 'arrow-line';
+                lineDiv.style.width = length + 'px';
+                lineDiv.style.left = busStart.x + 'px';
+                lineDiv.style.top = busStart.y + 'px';
+                lineDiv.style.transform = `rotate(${angle}deg)`;
+                lineDiv.style.transformOrigin = '0 0';
+                overlayLayer.appendChild(lineDiv);
+                const startHandle = document.createElement('div');
+                startHandle.className = 'drag-handle';
+                startHandle.style.left = busStart.x + 'px';
+                startHandle.style.top = busStart.y + 'px';
+                startHandle.setAttribute('data-handle', 'start');
+                overlayLayer.appendChild(startHandle);
+                const endHandle = document.createElement('div');
+                endHandle.className = 'drag-handle';
+                endHandle.style.left = busEnd.x + 'px';
+                endHandle.style.top = busEnd.y + 'px';
+                endHandle.setAttribute('data-handle', 'end');
+                overlayLayer.appendChild(endHandle);
+            } else if (busStart && !busEnd) {
+                const marker = document.createElement('div');
+                marker.className = 'marker';
+                marker.style.left = busStart.x + 'px';
+                marker.style.top = busStart.y + 'px';
+                marker.innerHTML = '🚌 СТАРТ (кликни финиш)';
+                marker.style.fontSize = '12px';
+                overlayLayer.appendChild(marker);
+            }
+            if (landingPoint) {
+                const marker = document.createElement('div');
+                marker.className = 'marker';
+                marker.style.left = landingPoint.x + 'px';
+                marker.style.top = landingPoint.y + 'px';
+                marker.innerHTML = '🎯 ПРИЗЕМЛЕНИЕ';
+                marker.style.fontSize = '14px';
+                overlayLayer.appendChild(marker);
+            }
+            if (selectedGlideSpot) {
+                const marker = document.createElement('div');
+                marker.className = 'marker';
+                marker.style.left = selectedGlideSpot.pixelX + 'px';
+                marker.style.top = selectedGlideSpot.pixelY + 'px';
+                marker.innerHTML = '🟢 РАСКРЫТЬ';
+                marker.style.fontSize = '12px';
+                marker.style.background = '#22c55e';
+                marker.style.color = 'white';
+                overlayLayer.appendChild(marker);
+            }
+            if (jumpPoint) {
+                const marker = document.createElement('div');
+                marker.className = 'marker';
+                marker.style.left = jumpPoint.x + 'px';
+                marker.style.top = jumpPoint.y + 'px';
+                marker.innerHTML = '🔴 ВЫПРЫГНУТЬ';
+                marker.style.fontSize = '14px';
+                marker.style.background = '#ef4444';
+                marker.style.color = 'white';
+                overlayLayer.appendChild(marker);
+                if (landingPoint) {
+                    const dx = landingPoint.x - jumpPoint.x;
+                    const dy = landingPoint.y - jumpPoint.y;
+                    const length = Math.hypot(dx, dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    const lineDiv = document.createElement('div');
+                    lineDiv.style.position = 'absolute';
+                    lineDiv.style.width = length + 'px';
+                    lineDiv.style.height = '3px';
+                    lineDiv.style.background = '#ffffff';
+                    lineDiv.style.left = jumpPoint.x + 'px';
+                    lineDiv.style.top = jumpPoint.y + 'px';
+                    lineDiv.style.transform = `rotate(${angle}deg)`;
+                    lineDiv.style.transformOrigin = '0 0';
+                    lineDiv.style.opacity = '0.5';
+                    overlayLayer.appendChild(lineDiv);
+                }
+            }
+        }
+        
+        function updateTransform() {
+            img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+            drawOverlay();
+            zoomSpan.innerText = Math.round(scale * 100) + '%';
+        }
+        
+        function clampBounds() {
+            const rect = container.getBoundingClientRect();
+            const scaledW = IMG_W * scale;
+            const scaledH = IMG_H * scale;
+            if (scaledW <= rect.width) tx = (rect.width - scaledW) / 2;
+            else tx = Math.min(0, Math.max(rect.width - scaledW, tx));
+            if (scaledH <= rect.height) ty = (rect.height - scaledH) / 2;
+            else ty = Math.min(0, Math.max(rect.height - scaledH, ty));
+            updateTransform();
+        }
+        
+        function centerMap() {
+            const rect = container.getBoundingClientRect();
+            tx = (rect.width - IMG_W * scale) / 2;
+            ty = (rect.height - IMG_H * scale) / 2;
+            updateTransform();
+        }
+        
+        function zoomAtPoint(newScale, clientX, clientY) {
+            const rect = container.getBoundingClientRect();
+            const minScale = Math.min(rect.width / IMG_W, rect.height / IMG_H);
+            const clamped = Math.min(5, Math.max(minScale, newScale));
+            if (Math.abs(clamped - scale) < 0.001) return;
+            const mouseX = clientX - rect.left;
+            const mouseY = clientY - rect.top;
+            const imgX = (mouseX - tx) / scale;
+            const imgY = (mouseY - ty) / scale;
+            scale = clamped;
+            tx = mouseX - imgX * scale;
+            ty = mouseY - imgY * scale;
+            clampBounds();
+        }
+        
+        function onWheel(e) {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            zoomAtPoint(scale + delta, e.clientX, e.clientY);
+        }
+        
+        function zoomIn() {
+            const rect = container.getBoundingClientRect();
+            zoomAtPoint(scale + 0.1, rect.left + rect.width/2, rect.top + rect.height/2);
+        }
+        
+        function zoomOut() {
+            const rect = container.getBoundingClientRect();
+            zoomAtPoint(scale - 0.1, rect.left + rect.width/2, rect.top + rect.height/2);
+        }
+        
+        function onMouseDown(e) {
+            const target = e.target.closest('.drag-handle');
+            if (target && busStart && busEnd) {
+                e.preventDefault();
+                dragHandle = target;
+                dragHandleType = target.getAttribute('data-handle');
+                dragHandle.style.cursor = 'grabbing';
+                return;
+            }
+            isDragging = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            dragStartTx = tx;
+            dragStartTy = ty;
+            container.style.cursor = 'grabbing';
+        }
+        
+        function onMouseMove(e) {
+            if (dragHandle && dragHandleType && busStart && busEnd) {
+                const coords = screenToImageCoords(e.clientX, e.clientY);
+                if (dragHandleType === 'start') busStart = coords;
+                else if (dragHandleType === 'end') busEnd = coords;
+                jumpPoint = computeJumpPoint(busStart, busEnd, selectedGlideSpot);
+                drawOverlay();
+                return;
+            }
+            if (isDragging) {
+                tx = dragStartTx + (e.clientX - dragStartX);
+                ty = dragStartTy + (e.clientY - dragStartY);
+                clampBounds();
+            }
+            const imgCoord = screenToImageCoords(e.clientX, e.clientY);
+            coordsSpan.innerHTML = `📍 X: ${Math.round(imgCoord.x)}, Y: ${Math.round(imgCoord.y)}`;
+        }
+        
+        function onMouseUp() {
+            if (dragHandle) {
+                dragHandle.style.cursor = '';
+                dragHandle = null;
+                dragHandleType = null;
+                return;
+            }
+            isDragging = false;
+            container.style.cursor = 'grab';
+        }
+        
+        function onCanvasClick(e) {
+            if (dragHandle) return;
+            if (clickLock) return;
+            const coords = screenToImageCoords(e.clientX, e.clientY);
+            
+            if (clickStep === 0) {
+                busStart = coords;
+                busEnd = null;
+                landingPoint = null;
+                selectedGlideSpot = null;
+                jumpPoint = null;
+                clickStep = 1;
+                drawOverlay();
+            } else if (clickStep === 1) {
+                if (!busStart) { clickStep = 0; return; }
+                busEnd = coords;
+                clickStep = 2;
+                drawOverlay();
+            } else if (clickStep === 2) {
+                if (!busStart || !busEnd) { clickStep = 0; return; }
+                landingPoint = coords;
+                clickStep = 3;
+                drawOverlay();
+            }
+        }
+        
+        function forceRecalculate() {
+            if (busStart && busEnd && landingPoint) {
+                selectedGlideSpot = findBestGlideSpot(landingPoint, busStart, busEnd);
+                jumpPoint = computeJumpPoint(busStart, busEnd, selectedGlideSpot);
+                drawOverlay();
+                coordsSpan.innerHTML = '✅ Пересчитано! Точка прыжка обновлена';
+                setTimeout(() => { if (landingPoint) drawOverlay(); }, 2000);
+            } else {
+                coordsSpan.innerHTML = '⚠️ Сначала поставь старт, финиш и точку приземления';
+                setTimeout(() => { drawOverlay(); }, 2000);
+            }
+        }
+        
+        function resetAll() {
+            clickLock = true;
+            busStart = null;
+            busEnd = null;
+            landingPoint = null;
+            selectedGlideSpot = null;
+            jumpPoint = null;
+            clickStep = 0;
+            dragHandle = null;
+            dragHandleType = null;
+            overlayLayer.innerHTML = '';
+            overlayLayer.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+            drawOverlay();
+            setTimeout(() => { clickLock = false; }, 150);
+        }
+        
+        function onResize() { centerMap(); }
+        
+        container.addEventListener('mousedown', onMouseDown);
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+        container.addEventListener('wheel', onWheel, { passive: false });
+        container.addEventListener('click', onCanvasClick);
+        zoomInBtn.addEventListener('click', zoomIn);
+        zoomOutBtn.addEventListener('click', zoomOut);
+        resetBtn.addEventListener('click', resetAll);
+        calculateBtn.addEventListener('click', forceRecalculate);
+        window.addEventListener('resize', onResize);
+        
+        img.onload = () => { centerMap(); drawOverlay(); };
+        if (img.complete) { centerMap(); drawOverlay(); }
+        
+        checkAuth();
+    })();
 </script>
 </body>
 </html>
